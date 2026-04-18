@@ -47,8 +47,14 @@ permissions:
       mi.player.join: true
       mi.player.create: true
       mi.player.team: true
+      mi.player.queue: true
   mi.bypass.*:
     description: Permisos especiales
     default: op
     children:
       mi.bypass.limit: true
+  mi.admin.queue.*:
+    description: Permisos de cola admin
+    default: op
+    children:
+      mi.admin.queue.launch: true

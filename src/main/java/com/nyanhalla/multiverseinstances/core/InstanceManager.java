@@ -273,6 +273,12 @@ public class InstanceManager {
 
         dataStore.save(instance);
         player.sendMessage(MessageUtils.colorize("&aTe has unido a la instancia &e" + instanceId + "&a."));
+
+        // Activar scoreboard
+        if (plugin.getInstanceScoreboard() != null) {
+            plugin.getInstanceScoreboard().createForPlayer(player, instance);
+        }
+
         return true;
     }
 
@@ -299,6 +305,12 @@ public class InstanceManager {
 
         playerInstances.remove(uuid);
         player.sendMessage(MessageUtils.colorize("&aHas salido de la instancia."));
+
+        // Desactivar scoreboard
+        if (plugin.getInstanceScoreboard() != null) {
+            plugin.getInstanceScoreboard().removeForPlayer(player);
+        }
+
         return true;
     }
 
@@ -306,6 +318,10 @@ public class InstanceManager {
         UUID uuid = player.getUniqueId();
         Instance instance = getPlayerInstance(uuid);
         if (instance == null) {
+            // Limpiar cola si estaba en cola
+            if (plugin.getQueueManager() != null) {
+                plugin.getQueueManager().removeFromQueue(uuid);
+            }
             return;
         }
 
@@ -327,6 +343,14 @@ public class InstanceManager {
         }
 
         dataStore.save(instance);
+
+        // Limpiar scoreboard y cola
+        if (plugin.getInstanceScoreboard() != null) {
+            plugin.getInstanceScoreboard().removeForPlayer(player);
+        }
+        if (plugin.getQueueManager() != null) {
+            plugin.getQueueManager().removeFromQueue(uuid);
+        }
     }
 
     public void onVictory(Instance instance) {

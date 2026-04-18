@@ -5,6 +5,7 @@ import com.nyanhalla.multiverseinstances.core.Instance;
 import com.nyanhalla.multiverseinstances.models.Checkpoint;
 import com.nyanhalla.multiverseinstances.models.Monument;
 import com.nyanhalla.multiverseinstances.models.Team;
+import com.nyanhalla.multiverseinstances.queue.QueueEntry;
 import com.nyanhalla.multiverseinstances.templates.MapTemplate;
 import com.nyanhalla.multiverseinstances.utils.MessageUtils;
 import org.bukkit.Material;
@@ -53,6 +54,8 @@ public class InstanceCommand implements CommandExecutor, TabCompleter {
             case "status" -> handleStatus(sender);
             case "team" -> handleTeam(sender, args);
             case "template" -> handleTemplate(sender, args);
+            case "queue", "q" -> handleQueue(sender, args);
+            case "sb", "scoreboard" -> handleScoreboard(sender);
             case "reload" -> {
                 if (!sender.hasPermission("mi.admin.reload")) {
                     sender.sendMessage(MessageUtils.colorize("&cNo tienes permiso."));
@@ -420,6 +423,85 @@ public class InstanceCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(MessageUtils.colorize("&cAccion invalida. Usa add o remove."));
     }
 
+    private void handleQueue(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(MessageUtils.colorize("&cEste comando solo puede ser usado por jugadores."));
+            return;
+        }
+
+        if (args.length < 2) {
+            sendQueueHelp(player);
+            return;
+        }
+
+        String subAction = args[1].toLowerCase();
+        switch (subAction) {
+            case "leave" -> {
+                if (!player.hasPermission("mi.player.queue")) {
+                    player.sendMessage(MessageUtils.colorize("&cNo tienes permiso."));
+                    return;
+                }
+                plugin.getQueueManager().leaveQueue(player);
+            }
+            case "status" -> {
+                QueueEntry entry = plugin.getQueueManager().getPlayerEntry(player.getUniqueId());
+                if (entry == null) {
+                    player.sendMessage(MessageUtils.colorize("&cNo estas en ninguna cola."));
+                    return;
+                }
+                int position = plugin.getQueueManager().getQueuePosition(player.getUniqueId());
+                int total = plugin.getQueueManager().getQueueSize(entry.mapName());
+                player.sendMessage(MessageUtils.colorize(""));
+                player.sendMessage(MessageUtils.colorize("&6&l⏳ Estado de Cola"));
+                player.sendMessage(MessageUtils.colorize("&7━━━━━━━━━━━━━━━━━━━━━━━━"));
+                player.sendMessage(MessageUtils.colorize("&eMapa: &f" + entry.mapName()));
+                player.sendMessage(MessageUtils.colorize("&eEquipo: &f" + entry.teamName()));
+                player.sendMessage(MessageUtils.colorize("&ePosicion: &f#" + position + " &7de &f" + total));
+                player.sendMessage(MessageUtils.colorize("&eTiempo: &f" + entry.getWaitTimeFormatted()));
+                player.sendMessage(MessageUtils.colorize("&7━━━━━━━━━━━━━━━━━━━━━━━━"));
+                player.sendMessage(MessageUtils.colorize(""));
+            }
+            case "launch" -> {
+                if (!player.hasPermission("mi.admin.queue.launch")) {
+                    player.sendMessage(MessageUtils.colorize("&cNo tienes permiso para forzar lanzamientos."));
+                    return;
+                }
+                if (args.length < 3) {
+                    player.sendMessage(MessageUtils.colorize("&cUso: /mi queue launch <mapa>"));
+                    return;
+                }
+                plugin.getQueueManager().forceLaunch(args[2], player);
+            }
+            default -> {
+                // Tratar como nombre de mapa: /mi queue <mapName>
+                if (!player.hasPermission("mi.player.queue")) {
+                    player.sendMessage(MessageUtils.colorize("&cNo tienes permiso para usar la cola."));
+                    return;
+                }
+                plugin.getQueueManager().joinQueue(player, subAction);
+            }
+        }
+    }
+
+    private void sendQueueHelp(Player player) {
+        player.sendMessage(MessageUtils.colorize("&6&lCola de Instancias"));
+        player.sendMessage(MessageUtils.colorize("&7" + "=".repeat(40)));
+        player.sendMessage(MessageUtils.colorize("&e/mi queue <mapa> &7- Unirse a cola"));
+        player.sendMessage(MessageUtils.colorize("&e/mi queue leave &7- Salir de la cola"));
+        player.sendMessage(MessageUtils.colorize("&e/mi queue status &7- Ver posicion"));
+        player.sendMessage(MessageUtils.colorize("&e/mi queue launch <mapa> &7- Forzar lanzamiento (admin)"));
+        player.sendMessage(MessageUtils.colorize("&7" + "=".repeat(40)));
+    }
+
+    private void handleScoreboard(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(MessageUtils.colorize("&cEste comando solo puede ser usado por jugadores."));
+            return;
+        }
+
+        plugin.getInstanceScoreboard().toggleScoreboard(player);
+    }
+
     private void sendHelp(CommandSender sender) {
         sender.sendMessage(MessageUtils.colorize("&6&lMultiverse-Instances &7v" + plugin.getDescription().getVersion()));
         sender.sendMessage(MessageUtils.colorize("&7" + "=".repeat(40)));
@@ -431,6 +513,8 @@ public class InstanceCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(MessageUtils.colorize("&e/mi join <instancia> &7- Unirse a instancia"));
         sender.sendMessage(MessageUtils.colorize("&e/mi leave &7- Salir de instancia"));
         sender.sendMessage(MessageUtils.colorize("&e/mi status &7- Ver progreso"));
+        sender.sendMessage(MessageUtils.colorize("&e/mi queue <mapa> &7- Unirse a cola"));
+        sender.sendMessage(MessageUtils.colorize("&e/mi sb &7- Mostrar/ocultar scoreboard"));
         sender.sendMessage(MessageUtils.colorize("&e/mi team create <nombre> &7- Crear equipo"));
         sender.sendMessage(MessageUtils.colorize("&e/mi template ... &7- Gestionar plantilla del mapa"));
         sender.sendMessage(MessageUtils.colorize("&7" + "=".repeat(40)));
@@ -476,7 +560,8 @@ public class InstanceCommand implements CommandExecutor, TabCompleter {
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                                  @NotNull String alias, @NotNull String[] args) {
         if (args.length == 1) {
-            List<String> subCommands = Arrays.asList("create", "list", "info", "delete", "force-reset", "purge", "reload", "join", "leave", "status", "team", "template");
+            List<String> subCommands = Arrays.asList("create", "list", "info", "delete", "force-reset", "purge",
+                    "reload", "join", "leave", "status", "team", "template", "queue", "sb", "scoreboard");
             return subCommands.stream()
                     .filter(s -> s.startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
@@ -500,6 +585,18 @@ public class InstanceCommand implements CommandExecutor, TabCompleter {
             if (subCommand.equals("template")) {
                 return Arrays.asList("set", "info", "list", "checkpoint", "monument").stream()
                         .filter(s -> s.startsWith(args[1].toLowerCase()))
+                        .collect(Collectors.toList());
+            }
+
+            if (subCommand.equals("queue") || subCommand.equals("q")) {
+                List<String> queueSubs = Arrays.asList("leave", "status", "launch");
+                // Also add world names as direct queue targets
+                List<String> suggestions = new ArrayList<>(queueSubs);
+                plugin.getServer().getWorlds().stream()
+                        .map(World::getName)
+                        .forEach(suggestions::add);
+                return suggestions.stream()
+                        .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
                         .collect(Collectors.toList());
             }
         }

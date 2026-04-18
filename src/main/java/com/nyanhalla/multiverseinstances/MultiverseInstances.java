@@ -13,9 +13,13 @@ import com.nyanhalla.multiverseinstances.listeners.EntityDeathListener;
 import com.nyanhalla.multiverseinstances.listeners.PlayerMoveListener;
 import com.nyanhalla.multiverseinstances.listeners.PlayerQuitListener;
 import com.nyanhalla.multiverseinstances.listeners.WorldListener;
+import com.nyanhalla.multiverseinstances.queue.QueueManager;
+import com.nyanhalla.multiverseinstances.scoreboard.InstanceScoreboard;
 import com.nyanhalla.multiverseinstances.storage.YAMLInstanceStore;
 import com.nyanhalla.multiverseinstances.storage.YAMLTemplateStore;
 import com.nyanhalla.multiverseinstances.tasks.CheckpointParticleTask;
+import com.nyanhalla.multiverseinstances.tasks.QueueUpdateTask;
+import com.nyanhalla.multiverseinstances.tasks.ScoreboardUpdateTask;
 import com.nyanhalla.multiverseinstances.templates.TemplateManager;
 import com.nyanhalla.multiverseinstances.utils.MessageUtils;
 import org.bukkit.Bukkit;
@@ -34,6 +38,8 @@ public class MultiverseInstances extends JavaPlugin {
     private YAMLTemplateStore templateStore;
     private WorldCloner worldCloner;
     private TemplateManager templateManager;
+    private QueueManager queueManager;
+    private InstanceScoreboard instanceScoreboard;
 
     @Override
     public void onEnable() {
@@ -56,16 +62,26 @@ public class MultiverseInstances extends JavaPlugin {
         this.templateManager = new TemplateManager(this, templateStore, worldEditHook, worldGuardHook);
         this.instanceManager = new InstanceManager(this, instanceStore, worldCloner, templateManager);
         this.winConditionEngine = new WinConditionEngine(this, instanceManager);
+        this.queueManager = new QueueManager(this);
+        this.instanceScoreboard = new InstanceScoreboard(this);
 
         registerCommands();
         registerListeners();
         new CheckpointParticleTask(this).runTaskTimer(this, 20L, 20L);
+        new QueueUpdateTask(this).runTaskTimer(this, 20L, 20L);
+        new ScoreboardUpdateTask(this).runTaskTimer(this, 20L, 20L);
 
         getLogger().info("Multiverse-Instances ha sido habilitado correctamente usando la API de Multiverse 5.");
     }
 
     @Override
     public void onDisable() {
+        if (instanceScoreboard != null) {
+            instanceScoreboard.shutdown();
+        }
+        if (queueManager != null) {
+            queueManager.shutdown();
+        }
         if (instanceManager != null) {
             instanceManager.saveAllInstances();
             instanceManager.shutdown();
@@ -140,6 +156,14 @@ public class MultiverseInstances extends JavaPlugin {
 
     public TemplateManager getTemplateManager() {
         return templateManager;
+    }
+
+    public QueueManager getQueueManager() {
+        return queueManager;
+    }
+
+    public InstanceScoreboard getInstanceScoreboard() {
+        return instanceScoreboard;
     }
 
     public void broadcast(String message) {

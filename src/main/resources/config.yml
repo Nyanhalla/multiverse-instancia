@@ -62,3 +62,15 @@ inventory:
   save-mode: "instance"
   hotbar-locked: false
   enderchest-isolate: true
+
+# --- Cola de instancias ---
+queue:
+  min-players: 1                     # jugadores minimos para auto-lanzar
+  countdown: 10                      # segundos de countdown antes de lanzar
+  update-interval: 20                # ticks entre actualizaciones de action bar (20 = 1s)
+
+# --- Scoreboard in-game ---
+scoreboard:
+  enabled: true
+  title: "&6&lMULTIVERSE-INSTANCES"
+  update-interval: 20                # ticks entre actualizaciones (20 = 1s)
