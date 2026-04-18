@@ -1,0 +1,56 @@
+# --- Ajustes globales ---
+instance:
+  prefix: "inst_"
+  max-instances: 10
+  default-ttl: 3600
+  auto-cleanup-on-victory: true
+  reset-on-cleanup: true
+  clone-mode: "mirror"
+
+# --- Win Condition: CTM ---
+ctm:
+  enabled: true
+  monument-blocks:
+    - "NETHERITE_BLOCK"
+    - "BEACON"
+  require-all: true
+  victory-trigger: "broadcast"
+  victory-commands:
+    - "bc §6¡Equipo %team% ha completado el mapa!"
+    - "give %player% diamond 1"
+  broadcast-title:
+    title: "§6§l¡VICTORIA!"
+    subtitle: "§eMapa completado"
+    fade-in: 10
+    stay: 60
+    fade-out: 20
+
+# --- Win Condition: Dungeon ---
+dungeon:
+  enabled: true
+  boss-bar:
+    entity-type: "WITHER_SKELETON"
+    display-name: "§c§lDungeon Boss"
+    health-bar-sync: true
+  victory-on-death: true
+  phases: []
+  victory-trigger: "command"
+  victory-commands:
+    - "bc §6¡Dungeon completado por %team%!"
+
+# --- Win Condition: Checkpoint ---
+checkpoint:
+  enabled: true
+  max-checkpoints: 10
+  save-on-advance: true
+  partial-victory: false
+  check-in-region:
+    type: "WORLDGUARD"
+    auto-register: true
+
+# --- Inventarios aislados ---
+inventory:
+  isolate: true
+  save-mode: "instance"
+  hotbar-locked: false
+  enderchest-isolate: true
