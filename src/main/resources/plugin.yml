@@ -1,19 +1,21 @@
-name: Multiverse-Instancia
-version: 1.0.0
-main: com.nyanhalla.multiverseinstancia.MultiverseInstancia
+name: Multiverse-Instances
+version: ${project.version}
+main: com.nyanhalla.multiverseinstances.MultiverseInstances
 api-version: '1.20'
-description: Plugin para crear instancias paralelas de mapas adventure usando Multiverse-Core
+description: Plugin para crear instancias paralelas de mapas adventure usando la API de Multiverse 5
 author: Nyanhalla
-website: https://github.com/Nyanhalla/multiverse-instancia
+website: https://github.com/Nyanhalla/multiverse-instances
 
 softdepend:
   - Multiverse-Core
+  - WorldEdit
+  - WorldGuard
 
 commands:
   mi:
-    description: Comando principal de Multiverse-Instancia
-    usage: /<command> <create|list|info|delete|force-reset|purge|reload|join|leave|status|team>
-    aliases: [multiverseinstancia, minstancia]
+    description: Comando principal de Multiverse-Instances
+    usage: /<command> <create|list|info|delete|force-reset|purge|reload|join|leave|status|team|template>
+    aliases: [mvi, multiverseinstances, minstances]
   mijoin:
     description: Unirse a una instancia
     usage: /<command> <instancia>
@@ -37,6 +39,7 @@ permissions:
       mi.admin.list: true
       mi.admin.others: true
       mi.admin.reload: true
+      mi.admin.template: true
   mi.player.*:
     description: Permisos de jugador
     default: true

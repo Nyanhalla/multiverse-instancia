@@ -10,9 +10,7 @@ instance:
 # --- Win Condition: CTM ---
 ctm:
   enabled: true
-  monument-blocks:
-    - "NETHERITE_BLOCK"
-    - "BEACON"
+  monument-blocks: []                 # reservado; los monumentos se definen por plantilla admin
   require-all: true
   victory-trigger: "broadcast"
   victory-commands:
@@ -47,6 +45,16 @@ checkpoint:
   check-in-region:
     type: "WORLDGUARD"
     auto-register: true
+  particles:
+    enabled: true
+    type: "END_ROD"
+    count: 10
+    offset-x: 0.35
+    offset-y: 0.9
+    offset-z: 0.35
+    extra: 0.01
+    view-distance: 32.0
+    show-reached: false
 
 # --- Inventarios aislados ---
 inventory:
